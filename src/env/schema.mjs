@@ -9,6 +9,7 @@ export const serverSchema = z.object({
   DATABASE_URL: z.string(),
   NODE_ENV: z.enum(["development", "test", "production"]),
   OPENAI_API_KEY: z.string(),
+  NEXT_PUBLIC_MEASUREMENT_ID: z.string(),
 });
 
 /**
