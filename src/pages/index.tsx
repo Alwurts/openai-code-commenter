@@ -1,23 +1,24 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import LayoutBaseSkeleton from "../components/layout/LayoutSkeleton";
 import CodeBlock from "../components/CodeBlock";
 import { api } from "../utils/api";
 import Link from "next/link";
+import useRequestThrottle from "../hooks/useRequestThrottle";
 
 const CodePage = () => {
   const [code, setCode] = useState("");
   const [commentedCode, setCommentedCode] = useState("");
-  const [isQueryDisabled, setIsQueryDisabled] = useState(true);
-  const [timeUntilEnabled, setTimeUntilEnabled] = useState(0);
-  const disableQueryFor = 6000;
+  const disableQueryFor = 60000;
+
+  const { isQueryDisabled, timeUntilEnabled, startThrottle } =
+    useRequestThrottle(disableQueryFor);
 
   const onCodeChange = (code: string) => setCode(code.slice(0, 250));
 
   const codeMutate = api.commenter.commentCode.useMutation({
     onSuccess: (codeMutated) => {
-      setCommentedCode(codeMutated?.commentedCode as string);
-      /* if (!codeMutate || !codeMutated?.commentedCode.choices[0]?.text) return;
-      setCommentedCode(codeMutated.commentedCode.choices[0].text); */
+      if (!codeMutate || !codeMutated?.commentedCode.choices[0]?.text) return;
+      setCommentedCode(codeMutated.commentedCode.choices[0].text);
       window.scrollTo(0, document.body.scrollHeight);
     },
     onError: () => {
@@ -36,38 +37,9 @@ const CodePage = () => {
     }
     setCommentedCode("Working on it...");
     codeMutate.mutate({ code: code });
-    setIsQueryDisabled(true);
-    setTimeUntilEnabled(disableQueryFor);
-    localStorage.setItem("lastClickTime", Date.now().toString());
-    setTimeout(() => setIsQueryDisabled(false), disableQueryFor);
+
+    startThrottle();
   };
-
-  useEffect(() => {
-    const lastClickTime = localStorage.getItem("lastClickTime");
-    if (lastClickTime?.length) {
-      const timeSinceLastClick = Date.now() - Number(lastClickTime);
-      const timeUntil = Math.max(0, disableQueryFor - timeSinceLastClick);
-      if (timeUntil > 0) {
-        setIsQueryDisabled(true);
-        setTimeUntilEnabled(timeUntil);
-
-        setTimeout(() => setIsQueryDisabled(false), timeUntil);
-      } else {
-        setIsQueryDisabled(false);
-      }
-    } else {
-      setIsQueryDisabled(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (timeUntilEnabled > 0) {
-        setTimeUntilEnabled((prevTime) => prevTime - 1000);
-      }
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [timeUntilEnabled]);
 
   return (
     <LayoutBaseSkeleton title="Home">
@@ -87,11 +59,6 @@ const CodePage = () => {
               <Link href="/" className="text-orange-500 hover:text-orange-400">
                 About the app
               </Link>
-              <span className="mx-2">/</span>
-              <Link href="/" className="text-orange-500 hover:text-orange-400">
-                View History
-              </Link>
-              <span className="mx-2">/</span>
             </div>
           </nav>
           <div className="mb-4 rounded-3xl bg-slate-50 px-3 py-4 shadow-md">
