@@ -5,7 +5,7 @@ import Head from "next/head";
 
 const LayoutBaseSkeleton: FC<LayoutProps> = ({
   children,
-  title = "Auto-completer",
+  title = "Ai Code commenter",
 }) => {
   return (
     <Fragment>
