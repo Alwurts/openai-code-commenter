@@ -23,6 +23,11 @@ const CodePage = () => {
       if (!codeMutated?.commentedCode) return;
       setCommentedCode(codeMutated.commentedCode);
       window.scrollTo(0, document.body.scrollHeight);
+      gtag("event", "comment_code_request", {
+        event_category: "engagement",
+        event_label: "comment_code_request" + queryUserId,
+        value: codeMutated.commentedCode,
+      });
     },
     onError: () => {
       console.log("Errror mutate");
