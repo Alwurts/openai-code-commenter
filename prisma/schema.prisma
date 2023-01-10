@@ -63,3 +63,11 @@ model VerificationToken {
     @@unique([identifier, token])
     @@map("verification_tokens")
 }
+
+model CommentRequest {
+    id            String   @id @default(auto()) @map("_id") @db.ObjectId
+    userId        String
+    originalCode  String
+    commentedCode String
+    createdAt     DateTime @default(now())
+}

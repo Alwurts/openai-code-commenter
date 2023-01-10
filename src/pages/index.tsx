@@ -4,6 +4,7 @@ import CodeBlock from "../components/CodeBlock";
 import { api } from "../utils/api";
 import Link from "next/link";
 import useRequestThrottle from "../hooks/useRequestThrottle";
+import useIdentifyUser from "../hooks/useIdentifyUser";
 
 const CodePage = () => {
   const [code, setCode] = useState("");
@@ -13,18 +14,20 @@ const CodePage = () => {
   const { isQueryDisabled, timeUntilEnabled, startThrottle } =
     useRequestThrottle(disableQueryFor);
 
+  const queryUserId = useIdentifyUser();
+
   const onCodeChange = (code: string) => setCode(code.slice(0, 250));
 
   const codeMutate = api.commenter.commentCode.useMutation({
     onSuccess: (codeMutated) => {
-      if (!codeMutate || !codeMutated?.commentedCode.choices[0]?.text) return;
-      setCommentedCode(codeMutated.commentedCode.choices[0].text);
+      if (!codeMutated?.commentedCode) return;
+      setCommentedCode(codeMutated.commentedCode);
       window.scrollTo(0, document.body.scrollHeight);
     },
     onError: () => {
       console.log("Errror mutate");
       setCommentedCode(
-        "// Error while mutating\n// Please wait 1 min and try again"
+        "// Error while commenting\n// Please wait 1 min and try again"
       );
     },
   });
@@ -35,8 +38,12 @@ const CodePage = () => {
       setCommentedCode("// The code editor is empty");
       return;
     }
+    if (!queryUserId) {
+      setCommentedCode("// Client Error");
+      return;
+    }
     setCommentedCode("Working on it...");
-    codeMutate.mutate({ code: code });
+    codeMutate.mutate({ code: code, userId: queryUserId });
 
     startThrottle();
   };
@@ -56,8 +63,12 @@ const CodePage = () => {
               commented code will be displayed in the bottom code block.`}
             </p>
             <div className="mb-4 flex text-lg font-bold">
-              <Link href="/" className="text-orange-500 hover:text-orange-400">
-                About the app
+              <Link
+                href="https://www.alejandrowurts.com/"
+                className="text-orange-500 hover:text-orange-400"
+                target="_blank"
+              >
+                Made by Alwurts
               </Link>
             </div>
           </nav>
