@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import LayoutBaseSkeleton from "../components/layout/LayoutSkeleton";
 import CodeBlock from "../components/CodeBlock";
 import { api } from "../utils/api";
@@ -6,17 +6,15 @@ import Link from "next/link";
 
 const CodePage = () => {
   const [code, setCode] = useState("");
-  const [commentedCode, setCommentedCode] = useState(
-    "// Commented code shows here"
-  );
-  const [isButtonDisabled, setIsButtonDisabled] = useState(false);
+  const [commentedCode, setCommentedCode] = useState("");
+  const [isQueryDisabled, setIsQueryDisabled] = useState(true);
+  const [timeUntilEnabled, setTimeUntilEnabled] = useState(0);
+  const disableQueryFor = 6000;
 
   const onCodeChange = (code: string) => setCode(code.slice(0, 250));
 
   const codeMutate = api.commenter.commentCode.useMutation({
     onSuccess: (codeMutated) => {
-      console.log("Code Success");
-      console.log(codeMutated);
       setCommentedCode(codeMutated?.commentedCode as string);
       /* if (!codeMutate || !codeMutated?.commentedCode.choices[0]?.text) return;
       setCommentedCode(codeMutated.commentedCode.choices[0].text); */
@@ -31,19 +29,52 @@ const CodePage = () => {
   });
 
   const onCommentCode = async () => {
-    if (isButtonDisabled) return;
-    setIsButtonDisabled(true);
-    setCommentedCode("...");
+    if (isQueryDisabled) return;
+    if (!code.length) {
+      setCommentedCode("// The code editor is empty");
+      return;
+    }
+    setCommentedCode("Working on it...");
     codeMutate.mutate({ code: code });
-    setTimeout(() => setIsButtonDisabled(false), 6000);
+    setIsQueryDisabled(true);
+    setTimeUntilEnabled(disableQueryFor);
+    localStorage.setItem("lastClickTime", Date.now().toString());
+    setTimeout(() => setIsQueryDisabled(false), disableQueryFor);
   };
+
+  useEffect(() => {
+    const lastClickTime = localStorage.getItem("lastClickTime");
+    if (lastClickTime?.length) {
+      const timeSinceLastClick = Date.now() - Number(lastClickTime);
+      const timeUntil = Math.max(0, disableQueryFor - timeSinceLastClick);
+      if (timeUntil > 0) {
+        setIsQueryDisabled(true);
+        setTimeUntilEnabled(timeUntil);
+
+        setTimeout(() => setIsQueryDisabled(false), timeUntil);
+      } else {
+        setIsQueryDisabled(false);
+      }
+    } else {
+      setIsQueryDisabled(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (timeUntilEnabled > 0) {
+        setTimeUntilEnabled((prevTime) => prevTime - 1000);
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [timeUntilEnabled]);
 
   return (
     <LayoutBaseSkeleton title="Home">
       <div className="h-screen w-screen">
         <div className="mx-auto max-w-4xl p-4">
           <nav className="mx-3">
-            <h1 className="text-3xl font-bold text-orange-500">
+            <h1 className="mt-4 text-3xl font-bold text-orange-500">
               Code Commenter App
             </h1>
             <p className="my-4 font-medium text-white">
@@ -61,9 +92,6 @@ const CodePage = () => {
                 View History
               </Link>
               <span className="mx-2">/</span>
-              <Link href="/" className="text-orange-500 hover:text-orange-400">
-                Logout
-              </Link>
             </div>
           </nav>
           <div className="mb-4 rounded-3xl bg-slate-50 px-3 py-4 shadow-md">
@@ -71,17 +99,31 @@ const CodePage = () => {
               code={code}
               onCodeChange={onCodeChange}
               title="JavaScript code to comment"
+              placeHolder="// Copy your code here"
             />
-            <button
-              className="focus:shadow-outline mt-3 mb-10 rounded bg-orange-500 py-2 px-4 font-bold text-white hover:bg-orange-400 focus:outline-none disabled:bg-gray-200"
-              type="button"
-              onClick={onCommentCode}
-              disabled={isButtonDisabled}
-            >
-              Comment code
-            </button>
+            <div className="px-2 pt-3 pb-8">
+              <div className="flex items-center">
+                <button
+                  className="focus:shadow-outline mr-3 rounded bg-orange-500 py-2 px-4 font-bold text-white hover:bg-orange-400 focus:outline-none disabled:bg-gray-200"
+                  type="button"
+                  onClick={onCommentCode}
+                  disabled={isQueryDisabled}
+                >
+                  Comment code
+                </button>
+                <p>
+                  {isQueryDisabled &&
+                    `Available in ${Math.round(timeUntilEnabled / 1000)}s`}
+                </p>
+              </div>
+            </div>
 
-            <CodeBlock code={commentedCode} title="Commented code" readonly />
+            <CodeBlock
+              code={commentedCode}
+              title="Commented code"
+              readonly
+              placeHolder="// Commented code shows here"
+            />
           </div>
         </div>
       </div>
