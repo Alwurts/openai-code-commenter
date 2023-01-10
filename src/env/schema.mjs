@@ -9,7 +9,6 @@ export const serverSchema = z.object({
   DATABASE_URL: z.string(),
   NODE_ENV: z.enum(["development", "test", "production"]),
   OPENAI_API_KEY: z.string(),
-  NEXT_PUBLIC_MEASUREMENT_ID: z.string(),
 });
 
 /**
@@ -18,6 +17,7 @@ export const serverSchema = z.object({
  * To expose them to the client, prefix them with `NEXT_PUBLIC_`.
  */
 export const clientSchema = z.object({
+  NEXT_PUBLIC_MEASUREMENT_ID: z.string(),
   // NEXT_PUBLIC_CLIENTVAR: z.string(),
 });
 
@@ -29,4 +29,5 @@ export const clientSchema = z.object({
  */
 export const clientEnv = {
   // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
+  NEXT_PUBLIC_MEASUREMENT_ID: process.env.NEXT_PUBLIC_MEASUREMENT_ID,
 };
