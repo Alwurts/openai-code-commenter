@@ -10,6 +10,7 @@ import CopyButton from "./buttons/CopyButton";
 interface CodeBlockProps {
   code: string;
   title?: string;
+  placeHolder?: string;
   readonly?: boolean;
   onCodeChange?: (code: string) => void;
 }
@@ -17,6 +18,7 @@ interface CodeBlockProps {
 export default function CodeBlock({
   code,
   title,
+  placeHolder,
   readonly,
   onCodeChange,
 }: CodeBlockProps) {
@@ -61,7 +63,7 @@ export default function CodeBlock({
           highlight={(code) =>
             highlight(code, languages.js as Grammar, "javascript")
           }
-          placeholder="// Copy your code here"
+          placeholder={placeHolder}
           padding={10}
           style={{
             fontFamily: '"Fira code", "Fira Mono", monospace',
