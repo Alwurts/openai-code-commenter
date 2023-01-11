@@ -16,7 +16,7 @@ const CodePage = () => {
 
   const queryUserId = useIdentifyUser();
 
-  const onCodeChange = (code: string) => setCode(code.slice(0, 250));
+  const onCodeChange = (code: string) => setCode(code.slice(0, 1000));
 
   const codeMutate = api.commenter.commentCode.useMutation({
     onSuccess: (codeMutated) => {
@@ -81,12 +81,15 @@ const CodePage = () => {
                   className="focus:shadow-outline mr-3 rounded bg-green-500 py-2 px-4 font-bold text-white hover:bg-green-400 focus:outline-none disabled:bg-gray-200"
                   type="button"
                   onClick={onCommentCode}
-                  disabled={isQueryDisabled}
+                  disabled={
+                    isQueryDisabled || commentedCode === "Working on it..."
+                  }
                 >
                   Comment code
                 </button>
                 <p>
                   {isQueryDisabled &&
+                    commentedCode !== "Working on it..." &&
                     `Available in ${Math.round(timeUntilEnabled / 1000)}s`}
                 </p>
               </div>

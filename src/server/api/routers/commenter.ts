@@ -7,7 +7,7 @@ import { createTRPCRouter, publicProcedure } from "../trpc";
 export const commenterRouter = createTRPCRouter({
   commentCode: publicProcedure
     .input(
-      z.object({ code: z.string().min(1).max(250), userId: z.string().min(1) })
+      z.object({ code: z.string().min(1).max(1000), userId: z.string().min(1) })
     )
     .mutation(async ({ input, ctx }) => {
       const { prisma } = ctx;
@@ -24,12 +24,14 @@ export const commenterRouter = createTRPCRouter({
             input.code +
             "'\n\nHere is explicitily only the original code plus the comments without any new parts:\n",
           temperature: 0.1,
-          max_tokens: 150,
+          max_tokens: 350,
           top_p: 0,
-          frequency_penalty: 1.2,
-          presence_penalty: -1,
+          frequency_penalty: 1.5,
+          presence_penalty: -1.1,
           stop: ['"""'],
         });
+        console.log("aiResponse");
+        console.log(aiResponse);
       } catch (error: any) {
         if (error.response) {
           console.log(error.response.status);

@@ -46,9 +46,9 @@ export default function CodeBlock({
     <div className="rounded-lg bg-white shadow">
       <div className="flex h-10 items-center justify-start rounded-t-lg bg-slate-200">
         <h3 className="ml-3 font-medium text-slate-900">{title}</h3>
-        {code.length >= 250 && !readonly && (
+        {code.length >= 1000 && !readonly && (
           <p className="ml-4 font-medium text-red-500">
-            Character limit of 250 hit
+            Character limit of 1000 hit
           </p>
         )}
         <CopyButton code={code} />
